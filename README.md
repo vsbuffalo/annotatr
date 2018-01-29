@@ -5,13 +5,17 @@ a project because (1) I like working with tibble more than `GRanges` and (2) I
 feel like what I (and maybe others) want to do 90% of the time is simple and
 deserves a simple way to do it.
 
-The purpose of this package is annotate variants using a subset of a GFF file.
-The end result is the exact same dataframe/tibble you put in, plus some
-additional columns indicator how many of each feature are overlapped by a
-particular variant row. It's much like `bedtools annotate`, but meant to be
-party of tidyverse pipelines. For extremely thorough variant annotation (e.g.
-finding LoF variants, finding frameshifts, etc.) see GEMINI, SNPeff, or
-Annovar.
+The purpose of this package is annotate variants by overlapping genomic
+features using a subset of a GFF file. The end result is the exact same
+dataframe/tibble you put in, plus some additional columns indicator how many of
+each feature are overlapped by a particular variant row. It's much like
+`bedtools annotate`, but meant to be party of tidyverse pipelines. It feels
+like 90% of annotation problems come down to finding overlapping features and
+appending them as columns, yet (AFAIK) there's no set of functions to get us
+there.
+
+For extremely thorough variant annotation (e.g.  finding LoF variants, finding
+frameshifts, etc.) see GEMINI, SNPeff, or Annovar.
 
 It uses `GenomicRanges` for the overlap finding, but is designed to work with
 the tidyverse. This is sort of the next iteration of my experimental
