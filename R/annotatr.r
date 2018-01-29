@@ -32,7 +32,8 @@ read_gff <- function(file) {
 }
 
 tidy_gff <- function(x, chroms=NULL,
-                     features=c('exon', 'intron', 'gene', 'CDS')) {
+                     features=c('five_prime_UTR', 'three_prime_UTR', 
+                                'exon', 'intron', 'gene', 'CDS')) {
   out <- dplyr::select(dplyr::mutate(dplyr::filter(x, feature %in% features), 
                 id=extract_attr(attr, 'ID'),
                 parent=extract_attr(attr, 'Parent'),
