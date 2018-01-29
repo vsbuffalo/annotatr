@@ -10,6 +10,15 @@ extract_attr <- function(x, key)  {
   out
 }
 
+#' Read a GFF file
+#' 
+#' @param file the GFF file (can be gzipped) to read in.
+#'
+#' Read in a GFF file. This will not parse the attributes 
+#' column, as lazyily extracting what we need from this is 
+#' faster.
+#' 
+#' @export
 read_gff <- function(file) {
   gff_cols <- readr::cols(chrom=readr::col_character(),
                    source=readr::col_character(),
@@ -31,6 +40,14 @@ read_gff <- function(file) {
          feature=factor(feature))
 }
 
+#' Tidy a GFF tibble
+#'
+#' @param x a tibble of a GFF file.
+#' @param chroms a character vector of chromosomes to include.
+#' @param features a character vector of features
+#'    of the file to include (others filtered out).
+#'
+#' @export
 tidy_gff <- function(x, chroms=NULL,
                      features=c('five_prime_UTR', 'three_prime_UTR', 
                                 'exon', 'intron', 'gene', 'CDS')) {
@@ -45,8 +62,15 @@ tidy_gff <- function(x, chroms=NULL,
   out
 }
 
-
+#' Create a GenomicRanges object from a tibble
+#'
+#' @param x a tibble with columns (chrom | chr) and (start,end | pos). 
+#'   Optionally, a strand column. All other columns will be included
+#'   as metadata.
+#'
+#' @export
 to_granges <- function(x) {
+ if (class(x) == 'GRanges') return(x)
  if (!('chrom' %in% colnames(x))) {
     if ('chr' %in% colnames(x)) {
       # rename column name
@@ -88,6 +112,11 @@ vmessage <- function(msg, verbose) {
     message(msg)
 }
 
+#' Annotate the overlaps of dataset using a tibble or GRanges object of features
+#'
+#' @param x a tibble that can be converted to a GRanges object.
+#' @param annot annotation tibble or GRanges object, with a \code{features} 
+#'   of the feature labels.
 annotate_overlaps <- function(x, annot, verbose=TRUE) {
   if (is.list(annot$parent)) {
     annot <- tidyr::unnest(annot, parent)

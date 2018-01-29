@@ -1,20 +1,28 @@
 ## anotator -- simple annotation for population genomic variant data
 
-**Extreme beta, proceed with caution.**
+**Extreme beta, proceed with caution.** This is mostly code I've extracted from
+a project because (1) I like working with tibble more than `GRanges` and (2) I
+feel like what I (and maybe others) want to do 90% of the time is simple and
+deserves a simple way to do it.
 
 The purpose of this package is annotate variants using a subset of a GFF file.
 The end result is the exact same dataframe/tibble you put in, plus some
 additional columns indicator how many of each feature are overlapped by a
-particular variant row. It uses `GenomicRanges` for the overlap finding, but is
-designed to work with the tidyverse. This is sort of the next iteration of my
-experimental [gplyr](https://github.com/vsbuffalo/gplyr), with a narrower focus
-on simple but correct annotation of variants.
+particular variant row. It's much like `bedtools annotate`, but meant to be
+party of tidyverse pipelines. For extremely thorough variant annotation (e.g.
+finding LoF variants, finding frameshifts, etc.) see GEMINI, SNPeff, or
+Annovar.
+
+It uses `GenomicRanges` for the overlap finding, but is designed to work with
+the tidyverse. This is sort of the next iteration of my experimental
+[gplyr](https://github.com/vsbuffalo/gplyr), with a narrower focus on simple
+but correct annotation of variants.
 
 ```r
 # Read in the GFF file. This is lazy in parsing the attributes column
 # and extracts only a few key-values later (e.g. ID, parent, parent_type).
 > gff <- read_gff('inst/data/dmel-all-r5.30.gff.gz')
-> tgff <- gff %>% tidy_gff() 
+> tgff <- gff %>% tidy_gff()  ## only keeps specified features
 > tgff
 # A tibble: 222,629 x 8
     chrom start   end strand feature                                 id
@@ -31,7 +39,15 @@ on simple but correct annotation of variants.
 10     2L  8590  8667      +  intron intron_FBgn0031208:2_FBgn0031208:4
 # ... with 222,619 more rows, and 2 more variables: parent <list>,
 #   parent_type <chr>
+```
 
+Note that `parent` is a list-column; you can use `tidyr`'s `unnest(parent)` to
+expand out each parent gene.
+
+Now, imagine we have a tibble of data we want to annotate. This should have
+columns `chrom` and `pos`, or `chrom`, `start`, and `end`:
+
+```r
 # our dataset
 > d
 # A tibble: 1,503,403 x 10
@@ -55,7 +71,7 @@ on simple but correct annotation of variants.
 ```
 
 Note because we have overlapping exon annotations, we can have a variant
-classified as both an intron and exon. By default, the package will not
+classified as both an intron and exon. By default, the package will **not**
 collapse exons (e.g. by using `GenomicRanges` `reduce()`). However, you can use
 `dplyr` to do this yourself.
 
@@ -63,6 +79,25 @@ collapse exons (e.g. by using `GenomicRanges` `reduce()`). However, you can use
 > da_collapsed_exons <- da %>% select(chrom, pos, CDS:intron) %>% 
        mutate(intron=ifelse(gene > 1 & intron > 0 & exon == 0, 1, 0))
 ```
+
+Note that you can chain annotation. E.g. annotate the dataset with
+exons/introns/genes, etc. Then, collapse all genes, expand by 10kb on either
+side, and add another column. This package has a function `to_granges()` to
+make this easier:
+
+```r
+> genes <- tgff %>% filter(feature=='gene') %>% to_granges() %>% reduce()
+> genes <- reduce(genes) ## collapse overlapping genes
+> start(genes) <- start(genes) - 10e3
+> end(genes) <- end(genes) + 10e3
+# if you want, you could use trim() if you have chromosome lengths.
+> intragenic <- gaps(genes)
+> intragenic$feature <- 'intragenic'
+> da <- annotate_overlaps(da, intragenic)
+```
+
+Now we have annotated regions that are at least 10kb away from a gene region
+annotated as intragenic.
 
 
 ## Future Goals
