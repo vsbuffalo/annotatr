@@ -1,0 +1,11 @@
+Package: annotatr
+Title: tidy-based population genomic annotation
+Version: 0.0.0.9000
+Authors@R: 'Vince Buffalo <vsbuffaloAAAAA@gmail.com> [aut, cre]'
+Description: Annotate population genomic data using tidy approaches.
+Depends: R (>= 3.4.1)
+Imports: GenomicRanges, IRanges, tibble, dplyr, readr
+Suggests: tidyverse
+License: BSD
+Encoding: UTF-8
+LazyData: true
